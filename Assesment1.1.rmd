@@ -1,0 +1,53 @@
+---
+title: "Assessment 1.1"
+author: "Gessica Sardinha s4651724"
+date: "19/08/2021"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# R Markdown editing #
+
+## Markdown is a plain text formatting syntax aimed at making writing for the internet easier **I will be good** some time *very soon* 
+
+
+```{r fastfood}
+library(knitr)
+library(tidyverse)
+
+ fastfood <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-09-04/fastfood_calories.csv")
+```
+ 
+ #Named the variable as fastfood
+ 
+ #displaying first 10 rows of my fastfood
+
+
+```{r}
+
+
+fastfood10 <- fastfood %>% head(10) #displaying first 10 rows of fastfood.
+
+
+knitr::kable(fastfood10 [, 1:5]) #displaying first 10 rows and 5 variables
+
+filter
+
+fastfood10 %>% filter( calories>1000) #displaying calories more than 1000
+
+
+dont_eat_this <- fastfood10 %>% filter(total_fat>40 & total_carb>80) #displaying the observations with total fat > 40 and total_card>80 and assigned to variable dont_eat_this
+
+```
+
+```{r 2}
+
+Mcdonalds <-  fastfood %>% filter(restaurant == "Mcdonalds") #displaying 
+
+```
+
+
