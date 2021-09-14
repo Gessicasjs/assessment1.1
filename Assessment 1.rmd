@@ -1,0 +1,152 @@
+---
+title: "Assessment 1.1"
+author: "Gessica Sardinha s4651724"
+date: "19/08/2021"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# R Markdown editing #
+
+## Markdown is a plain text formatting syntax aimed at making writing for the internet easier **I will be good** some time *very soon* 
+
+
+```{r fastfood}
+library(knitr)
+library(tidyverse)
+library(skimr)
+library(ggplot2)
+
+ fastfood <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-09-04/fastfood_calories.csv")
+```
+ 
+ #variable name fastfood
+ 
+ #first 10 rows of my fastfood
+
+
+```{r}
+
+
+fastfood10 <- fastfood %>% head(10) # first 10 rows of fastfood.
+
+
+knitr::kable(fastfood10 [, 1:5]) #first 10 rows and 5 variables
+
+filter
+
+fastfood10 %>% filter( calories>1000) #displaying calories more than 1000
+
+
+dont_eat_this <- fastfood10 %>% filter(total_fat>40 & total_carb>80) 
+#displaying total fat > 40 and total_card>80 
+
+```
+
+#10
+```{r 2}
+
+Mcdonalds <-  fastfood %>% filter(restaurant == "Mcdonalds") 
+
+```
+#assessment 1 part 2
+
+#11
+```{r}
+ fastfood%>%skim ()
+
+```
+
+#12
+```{r}
+fastfood %>% count(restaurant)
+
+```
+
+#13
+```{r}
+fastfood%>%group_by(restaurant)%>%summarise(mean(calories))
+```
+
+#14
+```{r}
+fastfood%>%group_by(restaurant)%>%summarise(average_callories=mean(calories))
+
+```
+#15 
+```{r}
+ggplot(fastfood, aes(x = restaurant, y = total_fat)) + geom_point()
+#Because they show it how much fat which one have.
+##because we can see the difference between them, which company have more fat.
+
+
+```
+#16 
+```{r} 
+max_total_fat <- fastfood%>%group_by(restaurant) %>%
+summarise(max_total_fat=max(total_fat))
+
+```
+#17
+```{r}
+fastfood%>%filter(restaurant=="Mcdonalds")%>%ggplot(aes(x=sugar,y=protein,color=restaurant,size=sugar))+geom_point()
+```
+
+#assessment 1 part 3
+#18
+
+```{r factor}
+class(fastfood$restaurant)
+fastfood2 <- as_factor(fastfood$restaurant)
+
+```
+#19
+```{r}
+
+calories_type <- cut_number(fastfood$calories, n = 3, labels=c("low", "med", "high")) 
+ levels(calories_type)   
+ #did a  groups using cut_number functions
+
+fastfood <- fastfood %>% mutate(fct_relevel(calories_type)) # put the variable to data type
+```
+#20
+```{r plotting again}
+fastfood %>% ggplot(aes(calories_type,restaurant,))+ geom_col()+coord_flip()+
+  theme_linedraw()
+```
+#21
+
+```{r adding}
+fastfood <- fastfood %>% mutate(trans_fat_percent = trans_fat/total_fat * 100)
+
+```
+#22 
+```{r plots}
+
+ggplot(fastfood, aes(trans_fat_percent,restaurant,fill = restaurant))+ geom_col() +
+coord_flip() +
+theme_linedraw()
+```
+
+#23
+```{r totalfat}
+
+totalfat <- fastfood %>%
+  group_by(restaurant) %>%
+  summarise(total_fat = mean(total_fat)) # display the average `total_fat` for each type of restaurant
+  
+
+```
+#24
+```{r totalfat plot}
+
+ ggplot(totalfat, aes(total_fat, restaurant, fill = restaurant)) +
+  geom_col()
+
+```
+
+
