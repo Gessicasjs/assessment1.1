@@ -1,0 +1,218 @@
+---
+title: "Assessment 3"
+author: "Gessica Sardinha s4651724"
+        "Oksana Kuchma s4661806"
+
+date: "11/09/2021"
+output: html_document
+-------------------------
+## Business report 
+-------------------------
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+ikea_items <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-11-03/ikea.csv')
+
+```
+
+```{r}
+library(tidyverse)
+library(knitr)
+library(tidymodels)
+library(ggplot2)
+```
+
+# *DATA CLEANSING*
+
+# I want to change the name of all the variables
+
+
+
+```{r}
+ikea_items <- ikea_items %>%
+  rename("item_height" = height, "item_width" = width )
+```
+
+
+
+# 2. It is important to change the "character" variables into a "factor" for better analysis.
+
+
+
+```{r}
+ikea_items <- ikea_items %>%
+  mutate_if(is.character, factor)
+```
+
+
+```{r}
+  item_price <- cut_number(ikea_items$price, n = 3,labels=c("low", "med", "high"))
+```
+
+
+```{r}
+ikea_items <- ikea_items%>%
+  mutate(item_price = cut_number(ikea_items$price, n = 3,labels=c("low", "med", "high")))
+```
+
+
+
+
+# **ASKING QUESTION**
+
+### For each of the 17 ikea items, we know their:
+
+
+##### * experimental price of item group (item_price: either Med, Low, or High)
+
+##### * size in milliliters at the start of the experiment (item_hight), and
+
+##### * suture width at the end of the experiment (width).
+
+
+##### **Major Question:** Can we predict the item_price of the ikea items by knowing their item_height and item_width?
+
+##### **Subquestions:**
+
+##### Q1. How many different types of *item_price* are there?
+
+##### Q2. What is the relation between the *item_height* and the *item_width*?
+
+##### Q3. Is the relation between the *item_height* and *item_width* dependent on *item_price*?
+
+# **DESCRIPTIVE or EXPLORATORY ANALYSIS**
+
+##### Now let's explore the data by finding the answer to the above subquestions.
+
+### **Q1. How many different types of** item_price **are there?**
+
+```{r}
+ikea_items%>%
+  count(item_price)%>%
+  kable()
+
+```
+
+
+
+# We can see that there are only 3 types of  item_price - Med, Low & High. Each type has around 1230 values in it. This should make it easier for us to do our analysis and data viz.
+
+
+# Q2. What is the relation between the *item_height* and the *item_width*?
+
+## To find this relation, let's plot the item_height as X-axis and item_width as Y-axis. We then use the linear regression to see how they are related.
+
+```{r}
+ikea_items %>%
+  ggplot(aes(item_height, item_width)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE)
+```
+
+
+## We can see that ikea_items that were larger in volume at the start of the experiment not tended to have wider sutures at the end. The slope of the line shows a positive relation between the item_height and theitem_height.
+
+
+# Q3. Is the relation between the *item_height* and *item_width* dependent on *item_price*?
+
+## Now, let's see if the above identified positive relation is dependent on the different size pattern - Item Price.
+
+```{r}
+ikea_items %>%
+  ggplot(aes(item_height, item_width, colour = item_price)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE) +
+   scale_color_viridis_d(option = "plasma", end = .7) +
+  labs(x = "item_height", y = "item_height", colour = "Item Price")
+```
+
+## We can see that all the slopes shows a positive relation. However, these slopes look different. The ikea_items which are item High tend to become much more wider that those item Low. This means, the  width of the ikea_items are depended on their Item Price.
+
+# **PREDICTIVE ANALYSIS**
+
+## From our descriptive analysis, we have found that the final width of the urchins can be predicted by knowing their intial_volume and food_regime. We will now build a model to make these predictions.
+
+# Step 1: Split the dataset into Training & Testing datasets.
+
+```{r}
+ikea_items_split <- initial_split(ikea_items)
+ikea_items_train <- training(ikea_items_split)
+ikea_items_test <- testing(ikea_items_split)
+```
+
+#Step 2: Pre-process the data.
+
+##2.1 Set the recipe & get the ingredients 
+
+
+```{r}
+ikea_items_recipe <- recipe(price ~ item_height + item_width, data = ikea_items_train) 
+
+summary(ikea_items_recipe)
+
+```
+
+
+## 2.2 Write the recipe steps
+
+```{r}
+ikea_items_recipe <- ikea_items_recipe %>%
+  step_center(all_numeric(), -all_outcomes()) %>% 
+  step_scale(all_numeric(), -all_outcomes()) %>% 
+  step_corr(all_numeric())
+```
+
+
+## 2.3 Get ready with the prep
+
+```{r}
+ikea_items_prep <- prep(ikea_items_recipe, training = ikea_items_train)
+```
+
+## 2.4 Bake the recipe
+
+```{r}
+ikea_items_bake <- bake(ikea_items_prep, ikea_items_train)
+
+ikea_items_bake
+```
+
+
+# Step 3: Build a model
+
+## 3.1 Set up the model 
+
+```{r}
+model1 <- linear_reg() %>%
+  set_mode("regression") %>%
+  set_engine("lm")
+
+model1
+```
+
+## 3.2 Fit the model
+
+```{r}
+model1_fitted <- model1 %>%
+  fit(price ~ item_height * item_width, data = ikea_items_bake)
+
+summary(model1_fitted)
+```
+
+## Step 4: Create a workflow
+
+
+```{r}
+workflow <- workflow() %>%
+  add_recipe(ikea_items_recipe) %>%
+  add_model(model1)
+  
+workflow
+```
+
+
+
